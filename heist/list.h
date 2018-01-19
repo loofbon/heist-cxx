@@ -208,7 +208,7 @@ namespace heist {
              * Map then concat.
              */
             template <class Fn>
-            list<typename std::result_of<Fn(A)>::type::value_type> concatMap(const Fn& f) const {
+            list<typename std::result_of<Fn(A)>::type::value_type> concat_map(const Fn& f) const {
                 return concat(this->map(f));
             }
 
@@ -249,7 +249,7 @@ namespace heist {
                 return false;
             }
 
-            std::list<A> toStdList() const {
+            std::list<A> to_std_list() const {
                 std::list<A> out;
                 auto xs = *this;
                 while (xs) {
@@ -284,10 +284,12 @@ namespace heist {
             template <class B>
             B foldr(std::function<B(const A&,const B&)> f, B b) const
             {
-                if (*this)
-                    return f(this->head(), this->tail().foldr(f, b));
-                else
-                    return b;
+                auto xs = reverse();
+                while (xs) {
+                    b = f(xs.head(), b);
+                    xs = xs.tail();
+                }
+                return b;
             }
 
             /*!
@@ -343,8 +345,15 @@ namespace heist {
     template <class A>
     list<A> operator + (const list<A>& one, const list<A>& tother)
     {
-        if (one)
-            return one.head() %= (one.tail() + tother);
+        list<A> xs = one.reverse();
+        if (xs) {
+            list<A> out = tother;
+            while (xs) {
+                out = xs.head() %= out;
+                xs = xs.tail();
+            }
+            return out;
+        }
         else
             return tother;
     }
